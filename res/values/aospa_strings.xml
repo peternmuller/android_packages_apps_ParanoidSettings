@@ -3,7 +3,7 @@
      SPDX-FileCopyrightText: 2024 Paranoid Android
      SPDX-License-Identifier: Apache-2.0
 -->
-<resources>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
 
     <!-- Paranoid Android version -->
     <string name="aospa_version">Paranoid Android version</string>
@@ -207,5 +207,8 @@
     <!-- Annoying Notifications -->
     <string name="notification_sound_vib_screen_on_title">Annoying notifications</string>
     <string name="notification_sound_vib_screen_on_summary">Play sound and vibration for notifications when the screen is on</string>
+
+    <!-- Label for a numbered SIM card.  [CHAR LIMIT=40] -->
+    <string name="sim_card_number_title" translatable="false">SIM <xliff:g id="card_number">%1$d</xliff:g></string>
 
 </resources>
