@@ -30,6 +30,7 @@ import androidx.preference.Preference;
 import androidx.preference.PreferenceScreen;
 import androidx.preference.SwitchPreference;
 
+import com.android.settings.network.AllowedNetworkTypesListener;
 import com.android.settings.network.telephony.TelephonyTogglePreferenceController;
 import com.android.settingslib.core.lifecycle.LifecycleObserver;
 import com.android.settingslib.core.lifecycle.events.OnStart;
@@ -46,6 +47,7 @@ public class Smart5gPreferenceController extends TelephonyTogglePreferenceContro
     Preference mPreference;
     private TelephonyManager mTelephonyManager;
     private PhoneCallStateTelephonyCallback mTelephonyCallback;
+    private AllowedNetworkTypesListener mAllowedNetworkTypesListener;
     private boolean mHas5gCapability = false;
     private Integer mCallState = TelephonyManager.CALL_STATE_IDLE;
 
@@ -77,6 +79,13 @@ public class Smart5gPreferenceController extends TelephonyTogglePreferenceContro
         mHas5gCapability =
                 (supportedRadioBitmask & TelephonyManager.NETWORK_TYPE_BITMASK_NR) > 0;
 
+        if (mAllowedNetworkTypesListener == null) {
+            mAllowedNetworkTypesListener = new AllowedNetworkTypesListener(
+                    mContext.getMainExecutor());
+            mAllowedNetworkTypesListener.setAllowedNetworkTypesListener(
+                    () -> updateState(mPreference));
+        }
+
         Log.d(TAG, "mHas5gCapability: " + mHas5gCapability);
         return this;
     }
@@ -95,18 +104,22 @@ public class Smart5gPreferenceController extends TelephonyTogglePreferenceContro
 
     @Override
     public void onStart() {
-        if (mTelephonyCallback == null) {
-            return;
+        if (mTelephonyCallback != null) {
+            mTelephonyCallback.register(mTelephonyManager);
         }
-        mTelephonyCallback.register(mTelephonyManager);
+        if (mAllowedNetworkTypesListener != null) {
+            mAllowedNetworkTypesListener.register(mContext, mSubId);
+        }
     }
 
     @Override
     public void onStop() {
-        if (mTelephonyCallback == null) {
-            return;
+        if (mTelephonyCallback != null) {
+            mTelephonyCallback.unregister();
         }
-        mTelephonyCallback.unregister();
+        if (mAllowedNetworkTypesListener != null) {
+            mAllowedNetworkTypesListener.unregister(mContext, mSubId);
+        }
     }
 
     @Override
@@ -138,8 +151,14 @@ public class Smart5gPreferenceController extends TelephonyTogglePreferenceContro
         return (mCallState != null) && (mCallState == TelephonyManager.CALL_STATE_IDLE);
     }
 
+    private boolean is5gEnabled() {
+        long allowed = mTelephonyManager.getAllowedNetworkTypesForReason(
+                TelephonyManager.ALLOWED_NETWORK_TYPES_REASON_USER);
+        return (allowed & TelephonyManager.NETWORK_TYPE_BITMASK_NR) > 0;
+    }
+
     private boolean isUserControlAllowed() {
-        return isCallStateIdle();
+        return is5gEnabled() && isCallStateIdle();
     }
 
     private class PhoneCallStateTelephonyCallback extends TelephonyCallback implements
