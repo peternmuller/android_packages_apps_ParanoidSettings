@@ -191,4 +191,7 @@
     <string name="berry_black_theme_title">Use Black theme</string>
     <string name="berry_black_theme_summary">Force black background colors</string>
 
+    <!-- Radio Info -->
+    <string name="radio_info_title">Radio info</string>
+
 </resources>
